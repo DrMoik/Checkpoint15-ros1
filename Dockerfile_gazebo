@@ -1,37 +1,22 @@
-# Base image
-FROM osrf/ros:noetic-desktop-full-focal
+FROM ubuntu:20.04
 
-# Install Gazebo 11 and other dependencies
-RUN apt-get update && apt-get install -y \
-  gazebo11 \
-  ros-noetic-gazebo-ros-pkgs \
-  ros-noetic-gazebo-ros-control \
-  ros-noetic-ros-control \
-  ros-noetic-ros-controllers \
-  ros-noetic-joint-state-publisher \
-  ros-noetic-joint-state-controller \
-  ros-noetic-robot-state-publisher \
-  ros-noetic-robot-localization \
-  ros-noetic-xacro \
-  ros-noetic-tf2-ros \
-  ros-noetic-tf2-tools \
-  && rm -rf /var/lib/apt/lists/*
+# Install SSH server and SSHpass
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server sshpass && \
+    apt-get clean
 
-# Install TurtleBot3 via Debian Packages
-RUN apt update && apt install -y ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3
+# Create the 'tortoisebot' user and set its password
+RUN useradd -m tortoisebot && \
+    echo 'tortoisebot:raspberry' | chpasswd
 
-# make workspace
-WORKDIR /catkin_ws/src
+# Generate host keys
+RUN ssh-keygen -A
 
-# Copy the files in the current directory into the container
-COPY ./src/ /catkin_ws/src/
+# Expose SSH port
+EXPOSE 22
 
-# Build the workspace
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && cd /catkin_ws && catkin_make"
-
-# Source the ROS setup script
-RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-RUN echo "source /catkin_ws/devel/setup.bash" >> ~/.bashrc
-
-# Command to run when starting the container
-CMD /bin/bash -c "source /opt/ros/noetic/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch tortoisebot_gazebo tortoisebot_playground.launch"
+# Start SSH server and execute commands over SSH
+CMD service ssh start && \
+    echo "SSH server started. Waiting for SSH to be available..." && \
+    echo "SSH server is ready. Executing commands..." && \
+    sshpass -p "raspberry" ssh -o StrictHostKeyChecking=no tortoisebot@master "bash -ic 'export ROS_MASTER_URI=http://master:45225/ && noetic && roslaunch tortoisebot_firmware bringup.launch'"

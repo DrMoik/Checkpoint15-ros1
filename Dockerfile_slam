@@ -8,10 +8,7 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-joy \
     ros-noetic-teleop-twist-joy \
     ros-noetic-teleop-twist-keyboard \
-    ros-noetic-rviz
-
-# Install TurtleBot3 via Debian Packages
-RUN apt-get update && apt-get install -y \
+    ros-noetic-rviz \
     ros-noetic-dynamixel-sdk \
     ros-noetic-turtlebot3-msgs \
     ros-noetic-turtlebot3
@@ -20,14 +17,16 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /catkin_ws/src
 WORKDIR /catkin_ws
 
-# Copy the map, configuration and launch files needed for navigation
+# Copy the map, configuration, and launch files needed for navigation
 COPY ./src /catkin_ws/src
 
 # Build the workspace
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 
 # Source the setup.bash file automatically when the container starts
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 RUN echo "source /catkin_ws/devel/setup.bash" >> ~/.bashrc
 
+
 # Command to run when starting the container
-CMD /bin/bash -c "sleep 30 && source /opt/ros/noetic/setup.bash && source /catkin_ws/devel/setup.bash && roslaunch tortoisebot_slam mapping.launch"
+CMD /bin/bash -c " source /opt/ros/noetic/setup.bash && source /catkin_ws/devel/setup.bash"
