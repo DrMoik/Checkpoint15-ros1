@@ -1,11 +1,11 @@
 version: '3'
 services:
-  tortoisebot-ros1-gazebo:
+  tortoisebot-ros1-real:
     build:
       context: ./
-      dockerfile: Dockerfile_gazebo
-    image: tortoisebot-ros1-gazebo
-    container_name: tortoisebot-ros1-gazebo_1
+      dockerfile: Dockerfile_real
+    image: tortoisebot-ros1-real
+    container_name: tortoisebot-ros1-real_1
     network_mode: host
     environment:
       - "DISPLAY=${DISPLAY}"
@@ -20,7 +20,7 @@ services:
     container_name: tortoisebot-ros1-slam_1
     network_mode: host
     depends_on:
-      - tortoisebot-ros1-gazebo
+      - tortoisebot-ros1-real
     environment:
       - "DISPLAY=${DISPLAY}"
       - "ROS_MASTER_URI=http://master:11311"
